@@ -1,19 +1,13 @@
 # Horoscope (ironic)
 
----
-
 ## General info
 
 This project makes a request to [ChatGPT](https://openai.com/blog/chatgpt) for an ironic horoscope. Daily data is stored in a separate file _cache.txt_ and updated once a day if necessary.
-
----
 
 ## Work with
 
 1. Contacting third-party API services;
 2. _Promise_, _async/await_ and _setTimeout_;
-
----
 
 ## Setup
 
