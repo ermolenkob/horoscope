@@ -1,20 +1,22 @@
-#Ironic horoscope
+# Horoscope (ironic)
 
 ---
 
-##General info
+## General info
+
 This project makes a request to [ChatGPT](https://openai.com/blog/chatgpt) for an ironic horoscope. Daily data is stored in a separate file _cache.txt_ and updated once a day if necessary.
 
 ---
 
-##Work with
+## Work with
 
 1. Contacting third-party API services;
 2. _Promise_, _async/await_ and _setTimeout_;
 
 ---
 
-##Setup
+## Setup
+
 Inside the _horoscopeGPT.js_ file, you need to specify your [apiKey](https://platform.openai.com/account/api-keys) to request to [ChatGPT](https://openai.com/blog/chatgpt).
 
 ```
