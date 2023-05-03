@@ -7,7 +7,7 @@ This project makes a request to [ChatGPT](https://openai.com/blog/chatgpt) for a
 ## Work with
 
 1. Contacting third-party API services;
-2. _Promise_, _async/await_ and _setTimeout_;
+2. _EventEmitter_ and _async/await_;
 
 ## Setup
 
