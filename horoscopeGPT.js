@@ -2,6 +2,21 @@ const fs = require("fs");
 const events = require("events");
 const myEmitter = new events.EventEmitter();
 const currDate = new Date().toJSON().slice(0, 10);
+const arrSings = [
+  "aries",
+  "taurus",
+  "gemini",
+  "cancer",
+  "leo",
+  "virgo",
+  "libra",
+  "scorpio",
+  "ophiuchus",
+  "sagittarius",
+  "capricorn",
+  "aquarius",
+  "pisces",
+];
 let horoscopeReady = false;
 let currentHoroscope;
 
@@ -32,9 +47,6 @@ function getCurrentHoroscope() {
 }
 
 function thereIsEmptySing() {
-  // get a list of zodiac signs to check
-  const arrSings = getArrayOfSings();
-
   for (let sing of arrSings) {
     if (
       currentHoroscope[sing] === "" ||
@@ -46,34 +58,26 @@ function thereIsEmptySing() {
   return false;
 }
 
-function getArrayOfSings() {
-  return [
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "ophiuchus",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-  ];
-}
-
 async function getNewHoroscopeAndWriteItInCache() {
+  const arrPromises = [];
+
+  // get the current horoscope for each sign
+  for (let signsName of arrSings) arrPromises.push(requestToChatGPT(signsName));
+
+  await Promise.all(arrPromises);
+
   // fill in the structure of the object currentHoroscope
-  getHoroscopeStructure(currDate);
-
-  for (signsName in currentHoroscope) {
-    if (signsName === "date") continue;
-
-    // get the current horoscope for each sign
-    currentHoroscope[signsName] = await requestToChatGPT(signsName);
-  }
+  currentHoroscope = await arrSings.reduce(
+    (target, key, index) => {
+      arrPromises[index]
+        .then((data) => {
+          target[key] = data.choices[0].text;
+        })
+        .catch((err) => console.error(`Error #2: ${err}`));
+      return target;
+    },
+    { date: currDate }
+  );
 
   // write new data to file cache.txt
   fs.writeFileSync("cache.txt", JSON.stringify(currentHoroscope), (err) => {
@@ -82,20 +86,6 @@ async function getNewHoroscopeAndWriteItInCache() {
 
   // announce that the horoscope is ready
   myEmitter.emit("horoscopeIsReady", "new ");
-}
-
-function getHoroscopeStructure(currDate) {
-  // get a list of zodiac signs to check
-  const arrSings = getArrayOfSings();
-
-  // prepare an empty object structure
-  currentHoroscope = arrSings.reduce(
-    function (target, key) {
-      target[key] = "";
-      return target;
-    },
-    { date: currDate }
-  );
 }
 
 function requestToChatGPT(signsName) {
@@ -119,11 +109,7 @@ function requestToChatGPT(signsName) {
     }),
   })
     .catch((err) => console.error(`Error #1: ${err}`))
-    .then((response) => response.json())
-    .catch((err) => console.error(`Error #2: ${err}`))
-    .then((data) => {
-      return data.choices[0].text;
-    });
+    .then((response) => response.json());
 }
 
 // the function "sendHoroscope" will report the readiness of a new or the receipt of an existing horoscope
