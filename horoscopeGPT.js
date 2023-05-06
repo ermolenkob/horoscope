@@ -2,6 +2,21 @@ const fs = require("fs");
 const events = require("events");
 const myEmitter = new events.EventEmitter();
 const currDate = new Date().toJSON().slice(0, 10);
+const arrSings = [
+  "aries",
+  "taurus",
+  "gemini",
+  "cancer",
+  "leo",
+  "virgo",
+  "libra",
+  "scorpio",
+  "ophiuchus",
+  "sagittarius",
+  "capricorn",
+  "aquarius",
+  "pisces",
+];
 let horoscopeReady = false;
 let currentHoroscope;
 
@@ -32,9 +47,6 @@ function getCurrentHoroscope() {
 }
 
 function thereIsEmptySing() {
-  // get a list of zodiac signs to check
-  const arrSings = getArrayOfSings();
-
   for (let sing of arrSings) {
     if (
       currentHoroscope[sing] === "" ||
@@ -46,26 +58,7 @@ function thereIsEmptySing() {
   return false;
 }
 
-function getArrayOfSings() {
-  return [
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "ophiuchus",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-  ];
-}
-
 async function getNewHoroscopeAndWriteItInCache() {
-  const arrSings = getArrayOfSings();
   const arrPromises = [];
 
   // get the current horoscope for each sign
