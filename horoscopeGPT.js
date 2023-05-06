@@ -65,15 +65,26 @@ function getArrayOfSings() {
 }
 
 async function getNewHoroscopeAndWriteItInCache() {
+  const arrSings = getArrayOfSings();
+  const arrPromises = [];
+
+  // get the current horoscope for each sign
+  for (let signsName of arrSings) arrPromises.push(requestToChatGPT(signsName));
+
+  await Promise.all(arrPromises);
+
   // fill in the structure of the object currentHoroscope
-  getHoroscopeStructure(currDate);
-
-  for (signsName in currentHoroscope) {
-    if (signsName === "date") continue;
-
-    // get the current horoscope for each sign
-    currentHoroscope[signsName] = await requestToChatGPT(signsName);
-  }
+  currentHoroscope = await arrSings.reduce(
+    (target, key, index) => {
+      arrPromises[index]
+        .then((data) => {
+          target[key] = data.choices[0].text;
+        })
+        .catch((err) => console.error(`Error #2: ${err}`));
+      return target;
+    },
+    { date: currDate }
+  );
 
   // write new data to file cache.txt
   fs.writeFileSync("cache.txt", JSON.stringify(currentHoroscope), (err) => {
@@ -84,23 +95,10 @@ async function getNewHoroscopeAndWriteItInCache() {
   myEmitter.emit("horoscopeIsReady", "new ");
 }
 
-function getHoroscopeStructure(currDate) {
-  // get a list of zodiac signs to check
-  const arrSings = getArrayOfSings();
-
-  // prepare an empty object structure
-  currentHoroscope = arrSings.reduce(
-    function (target, key) {
-      target[key] = "";
-      return target;
-    },
-    { date: currDate }
-  );
-}
-
 function requestToChatGPT(signsName) {
   // !!! be sure to substitute your current key !!!
-  const apiKey = "your-api-key-here";
+  // const apiKey = "your-api-key-here";
+  const apiKey = "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";
   const engineId = "davinci";
   const maxTokens = 50;
   const temperature = 0.5;
@@ -119,11 +117,7 @@ function requestToChatGPT(signsName) {
     }),
   })
     .catch((err) => console.error(`Error #1: ${err}`))
-    .then((response) => response.json())
-    .catch((err) => console.error(`Error #2: ${err}`))
-    .then((data) => {
-      return data.choices[0].text;
-    });
+    .then((response) => response.json());
 }
 
 // the function "sendHoroscope" will report the readiness of a new or the receipt of an existing horoscope
