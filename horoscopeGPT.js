@@ -90,8 +90,7 @@ async function getNewHoroscopeAndWriteItInCache() {
 
 function requestToChatGPT(signsName) {
   // !!! be sure to substitute your current key !!!
-  // const apiKey = "your-api-key-here";
-  const apiKey = "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";
+  const apiKey = "your-api-key-here";
   const engineId = "davinci";
   const maxTokens = 50;
   const temperature = 0.5;
