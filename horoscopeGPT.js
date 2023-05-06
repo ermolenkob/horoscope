@@ -1,17 +1,20 @@
-let currDate = new Date().toJSON().slice(0, 10);
-let fs = require("fs");
+const fs = require("fs");
 const events = require("events");
 const myEmitter = new events.EventEmitter();
+const currDate = new Date().toJSON().slice(0, 10);
 let horoscopeReady = false;
 let currentHoroscope;
 
 function getCurrentHoroscope() {
-  // getting data from a file cache.txt
-  let arrCache = readFile();
-
   try {
-    // check if you can get the desired data from the file
-    currentHoroscope = arrCache.map((x) => JSON.parse(x))[0];
+    // getting data from a file cache.txt
+    currentHoroscope = fs
+      .readFileSync("cache.txt", {
+        encoding: "utf8",
+        flag: "r",
+      })
+      .split(/(?={")/)
+      .map((line) => JSON.parse(line))[0];
   } catch {
     // if the data in the file is incorrect, then make a new request to chatGPT
     getNewHoroscopeAndWriteItInCache();
@@ -26,20 +29,6 @@ function getCurrentHoroscope() {
   }
   // the horoscope from the file is correct. no new request to chatGPT
   horoscopeReady = true;
-}
-
-function readFile() {
-  try {
-    let fileCache = fs.readFileSync("cache.txt", {
-      encoding: "utf8",
-      flag: "r",
-    });
-    return fileCache.split(/(?={")/);
-  } catch {
-    // if the file is not found, create a new file
-    let newFile = fs.createWriteStream("cache.txt");
-    newFile.end();
-  }
 }
 
 function thereIsEmptySing() {
@@ -96,45 +85,45 @@ async function getNewHoroscopeAndWriteItInCache() {
 }
 
 function getHoroscopeStructure(currDate) {
-  currentHoroscope = { date: currDate };
-
   // get a list of zodiac signs to check
   const arrSings = getArrayOfSings();
 
   // prepare an empty object structure
-  for (let sing of arrSings) {
-    currentHoroscope[sing] = "";
-  }
+  currentHoroscope = arrSings.reduce(
+    function (target, key) {
+      target[key] = "";
+      return target;
+    },
+    { date: currDate }
+  );
 }
 
-async function requestToChatGPT(signsName) {
-  const prompt = `Give me please a funny and ironic ${signsName} horoscope, no more than 50 words, with out introductions.`;
-  const maxTokens = 50;
-  const temperature = 0.5;
+function requestToChatGPT(signsName) {
   // !!! be sure to substitute your current key !!!
   const apiKey = "your-api-key-here";
   const engineId = "davinci";
+  const maxTokens = 50;
+  const temperature = 0.5;
+  const prompt = `Give me a funny ironic ${signsName} horoscope without a hello`;
 
-  return await fetch(
-    `https://api.openai.com/v1/engines/${engineId}/completions`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        max_tokens: maxTokens,
-        temperature: temperature,
-      }),
-    }
-  )
+  return fetch(`https://api.openai.com/v1/engines/${engineId}/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      prompt: prompt,
+      max_tokens: maxTokens,
+      temperature: temperature,
+    }),
+  })
+    .catch((err) => console.error(`Error #1: ${err}`))
     .then((response) => response.json())
+    .catch((err) => console.error(`Error #2: ${err}`))
     .then((data) => {
       return data.choices[0].text;
-    })
-    .catch((err) => console.error(err));
+    });
 }
 
 // the function "sendHoroscope" will report the readiness of a new or the receipt of an existing horoscope
